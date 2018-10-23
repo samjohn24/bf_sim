@@ -2,10 +2,6 @@
 # FILE NAME      : bf_sim.py
 # AUTHOR         : Sammy Carbajal
 # ------------------------------------------------------------------------------
-# RELEASE HISTORY
-# VERSION DATE        AUTHOR        DESCRIPTION
-# 1.1     13 Sep 2018 S. Carbajal   Initial version.
-# ------------------------------------------------------------------------------
 # PURPOSE
 #   Simulation of a discrete-time beamformer using PDM modulated sensors.
 # -FHDR-------------------------------------------------------------------------
@@ -106,6 +102,11 @@ def main():
   # Save plot
   parser.add_argument("-s","--save-plot-prefix", 
                               help="prefix to save plots")
+
+  # Type
+  parser.add_argument("--domain", type=str, default='time',
+                              help="Domain (time, freq, hadam)")
+
   
   
   args = parser.parse_args()
@@ -230,9 +231,12 @@ def main():
   print '  {0:30}: {1:}'.format('Num. tested angles', angle_num_pts)
   print '  {0:30}: {1:}'.format('Sound speed (m/s)', c)
   
-  bf_time_sim (c, d, cic_osr, cic_disable, cic_order, fsi, fso, Di, M, 
-    angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, f_in, 
-    amp, stdv, mean, ndel_max, save_plot_prefix) 
+  if args.domain == 'time':
+    bf_time_sim (c, d, cic_osr, cic_disable, cic_order, fsi, fso, Di, M, 
+      angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, f_in, 
+      amp, stdv, mean, ndel_max, save_plot_prefix) 
+  else:
+    print 'Domain \''+ args.domain+ '\' not implemented yet.' 
  
 if __name__ == '__main__':
   main() 

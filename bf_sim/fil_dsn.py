@@ -5,10 +5,6 @@
   AUTHOR         : Sammy Carbajal
   AUTHORS EMAIL  : sammy.ipenza@nxp.com
   -----------------------------------------------------------------------------
-  RELEASE HISTORY
-  VERSION DATE        AUTHOR        DESCRIPTION
-  1.1     08 Aug 2016 S. Carbajal   - Initial version.
-  -----------------------------------------------------------------------------
   PURPOSE
     Library to design digital filters.
   -FHDR------------------------------------------------------------------------

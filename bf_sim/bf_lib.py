@@ -3,10 +3,6 @@
  FILE NAME      : bf_lib.py
  AUTHOR         : Sammy Carbajal
  ------------------------------------------------------------------------------
- RELEASE HISTORY
- VERSION DATE        AUTHOR        DESCRIPTION
- 1.1     13 Sep 2018 S. Carbajal   Initial version.
- ------------------------------------------------------------------------------
  PURPOSE
   Package for beamformer simulations.
  -FHDR-------------------------------------------------------------------------

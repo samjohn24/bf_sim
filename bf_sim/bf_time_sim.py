@@ -2,10 +2,6 @@
 # FILE NAME      : bf_time_sim.py
 # AUTHOR         : Sammy Carbajal
 # ------------------------------------------------------------------------------
-# RELEASE HISTORY
-# VERSION DATE        AUTHOR        DESCRIPTION
-# 1.1     13 Sep 2018 S. Carbajal   Initial version.
-# ------------------------------------------------------------------------------
 # PURPOSE
 #   Simulation of a discrete-time beamformer using PDM modulated sensors.
 # -FHDR-------------------------------------------------------------------------
