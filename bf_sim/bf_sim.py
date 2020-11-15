@@ -10,6 +10,7 @@ import numpy as np
 import argparse
 from bf_time_sim import *
 from bf_freq_1fft_sim import *
+from bf_freq_2fft_sim import *
 
 def main():
 
@@ -112,6 +113,10 @@ def main():
   # Save plot
   parser.add_argument("-s","--save-plot-prefix", 
                               help="prefix to save plots")
+
+  # Save in pdf
+  parser.add_argument("--pdf", action="store_true", default=False,
+                              help="save plots in PDF format")
 
   # Type
   parser.add_argument("--method", type=str, default='time',
@@ -249,17 +254,103 @@ def main():
   print '  {0:30}: {1:}'.format('Maximum delay units ', ndel_max)
   print '  {0:30}: {1:}'.format('Num. tested angles', angle_num_pts)
   print '  {0:30}: {1:}'.format('Sound speed (m/s)', c)
+
+  # ============================================================================
+  #                             MODEL INITIALIZATION
+  # ============================================================================
+  
+  # Reference time
+  ref_time = tm.clock()
+  
+  # Sound  Sources
+  s, k = bf_lib.inp_sources(fsi, angle, Di, f_in, amp, plot) 
+  
+  # Array Setup
+  r, a = bf_lib.ula_setup(M, d, k)  
+  
+  #   Array output
+  y = bf_lib.mic_array_setup(a, s, stdv, mean, False)
+  
+  # Sigma delta modulator
+  y_mod = bf_lib.sigma_delta(y)
+  
+  #  Decimation
+  if dec_disable:
+    y = y_mod
+    fs = fsi
+  else:
+    y = bf_lib.decimate(y_mod, OSR, ftype='fir')
+    fs = fso
+  
+  # Window length (output)
+  Do = len(y[:,0,0])
+  
+  # Printing
+  print 'Output parameters:'
+  print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fso/1e3)
+  print '  {0:30}: {1:}'.format('Number of samples', Do)
+
+  # ============================================================================
+  #                           BEAMFORMING METHOD
+  # ============================================================================
   
   if args.method == 'time':
-    bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso, 
-      OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, 
-      f_in, amp, stdv, mean, ndel_max, L, save_plot_prefix) 
+    pbf_del, angle_bf = bf_time_sim (d, dec_disable, OSR, M, c, 
+      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do) 
   elif args.method == 'freq_1fft':
-    bf_freq_1fft_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, 
-      fso, OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k,
-      angle, f_in, amp, stdv, mean, ndel_max, L, save_plot_prefix) 
+    pbf_del, angle_bf = bf_freq_1fft_sim (d, dec_disable, OSR, M, c, 
+      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do) 
+  elif args.method == 'freq_2fft':
+    pbf_del, angle_bf = bf_freq_2fft_sim (d, dec_disable, OSR, M, c,
+      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do) 
   else:
     print 'Domain \''+ args.method+ '\' not implemented yet.' 
+
+  # ============================================================================
+  #                                   PLOT
+  # ============================================================================
+  
+  # normalized power
+  pbf_del_n = pbf_del/np.max(pbf_del)
+    
+  # Power plot
+  fig = plt.figure()
+  plt.step(angle_bf*180./np.pi, pbf_del, 'k')
+  plt.xlabel('Angle (degrees)')
+  plt.title('Power')
+  plt.grid()
+  
+  if save_plot_prefix is not None:
+    if dec_disable:
+      _nodec = 'nodec'
+    else:
+      _nodec = 'dec'
+    if args.pdf:
+      filename = '%s_%d_%s_%s_power.pdf'%(save_plot_prefix,M,args.method,_nodec)
+    else:
+      filename = '%s_%d_%s_%s_power.png'%(save_plot_prefix,M,args.method,_nodec)
+    fig.savefig(filename)
+    print filename + ' was written.'
+  # Normalized power plot (polar)
+  fig = plt.figure()
+  ax = plt.subplot(111, projection='polar')
+  ax.step(angle_bf, pbf_del_n, 'k')
+  ax.grid(True)
+  ax.set_title('Normalized power (polar)')
+  
+  if save_plot_prefix is not None:
+    if dec_disable:
+      _nodec = 'nodec'
+    else:
+      _nodec = 'dec'
+    if args.pdf:
+      filename = '%s_%d_%s_%s_polar.pdf'%(save_plot_prefix,M,args.method,_nodec)
+    else:
+      filename = '%s_%d_%s_%s_polar.png'%(save_plot_prefix,M,args.method,_nodec)
+    fig.savefig(filename)
+    print filename + ' was written.'
+  
+  plt.show()
  
 if __name__ == '__main__':
   main() 

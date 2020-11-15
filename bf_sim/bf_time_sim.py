@@ -12,14 +12,10 @@ import matplotlib.pyplot as plt
 import time as tm
 import bf_lib
 
-def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso, 
-  OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, f_in, 
-  amp, stdv, mean, ndel_max, L, save_plot_prefix):
+def bf_time_sim (d, dec_disable, OSR, M, c, angle_num_pts, verbose, plot_del, 
+  plot_del_k, angle, ndel_max, L, r, y, fs, Do):
   """
   d:                distance between sensors,
-  cic_osr:          CIC filter oversampling rate,
-  cic_order:        CIC filter order,
-  cic_disable:      disable CIC filter,
   dec_disable:      disable decimation filter,
   fsi:              input sampling rate,
   fso:              output sampling rate,
@@ -38,47 +34,11 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
   mean:             channel noise (mean),
   ndel_max:         maximum delay chain length,
   L:                number of samples,
-  save_plot_prefix: prefix to save plot
   """
   
-  # ==============================================================================
-  #                             MODEL INITIALIZATION
-  # ==============================================================================
-  
-  # Reference time
-  ref_time = tm.clock()
-  
-  # Sound  Sources
-  s, k = bf_lib.inp_sources(fsi, angle, Di, f_in, amp, plot) 
-  
-  # Array Setup
-  r, a = bf_lib.ula_setup(M, d, k)  
-  
-  #   Array output
-  y = bf_lib.mic_array_setup(a, s, stdv, mean, False)
-  
-  # Sigma delta modulator
-  y_mod = bf_lib.sigma_delta(y)
-  
-  #  Decimation
-  if dec_disable:
-    y = y_mod
-    fs = fsi
-  else:
-    y = bf_lib.decimate(y_mod, OSR, ftype='fir')
-    fs = fso
-  
-  # Window length (output)
-  Do = len(y[:,0,0])
-  
-  # Printing
-  print 'Output parameters:'
-  print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fso/1e3)
-  print '  {0:30}: {1:}'.format('Number of samples', Do)
-  
-  # ==============================================================================
+  # ============================================================================
   #                           DISCRETE-TIME BEAMFORMER
-  # ==============================================================================
+  # ============================================================================
   
   # =========================
   #  Conventional Beamformer
@@ -167,37 +127,6 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
   # ======================
   
   print "Processing time:", (tm.clock()-initial_time)*1e3, "ms"
+
+  return pbf_del, angle_bf
   
-  # ==============================================================================
-  #                                   PLOT
-  # ==============================================================================
-  
-  # normalized power
-  pbf_del_n = pbf_del/np.max(pbf_del)
-    
-  # Power plot
-  fig = plt.figure()
-  plt.step(angle_bf*180./np.pi, pbf_del)
-  plt.xlabel('Angle (degrees)')
-  plt.title('Power')
-  plt.grid()
-  
-  if save_plot_prefix is not None:
-    filename = save_plot_prefix+'_power.png'
-    fig.savefig(filename)
-    print filename + ' was written.'
-  
-  # Normalized power plot (polar)
-  fig = plt.figure()
-  ax = plt.subplot(111, projection='polar')
-  ax.step(angle_bf, pbf_del_n)
-  ax.grid(True)
-  ax.set_title('Normalized power (polar)')
-  
-  if save_plot_prefix is not None:
-    filename = save_plot_prefix+'_polar.png'
-    fig.savefig(filename)
-    print filename + ' was written.'
-  
-  print "Total time (including plot):", (tm.clock()-initial_time)*1e3, "ms"
-  plt.show()

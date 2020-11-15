@@ -1,9 +1,9 @@
 # +FHDR-------------------------------------------------------------------------
-# FILE NAME      : bf_time_sim.py
+# FILE NAME      : bf_freq_2fft_sim.py
 # AUTHOR         : Sammy Carbajal
 # ------------------------------------------------------------------------------
 # PURPOSE
-#   Simulation of a discrete-time beamformer using PDM modulated sensors.
+#   Simulation of a two-dimensional FFT beamformer using PDM modulated sensors.
 # -FHDR-------------------------------------------------------------------------
 
 import numpy as np
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import time as tm
 import bf_lib
 
-def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
+def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del, 
   plot_del_k, angle, ndel_max, L, r, y, fs, Do):
   """
   d:                distance between sensors,
@@ -35,15 +35,18 @@ def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
   """
   
   # ============================================================================
-  #                        ONE-DIMENSIONAL FFT BEAMFORMER
+  #                        TWO-DIMENSIONAL FFT BEAMFORMER
   # ============================================================================
+
+  # Number of FFT sensors
+  Mi = angle_num_pts
   
   # ======================
   #   Beamformer  setup
   # ======================
   initial_time = tm.clock()
 
-  Ylm = bf_lib.bf_corr_setup(y, Do, L)
+  Zld = bf_lib.bf_fft_setup(y, Mi, Do, L)
   
   # ======================
   #     One run calc
@@ -53,7 +56,10 @@ def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
   loop_start_time = tm.clock();
   
   # One run
-  bf_lib.bf_corr_run(Ylm, np.pi, r, fs, calc_power=False)  
+  if dec_disable:
+    bf_lib.bf_fft_run(Zld, np.pi, d, fs, OSR, calc_power=False)
+  else:
+    bf_lib.bf_fft_run(Zld, np.pi, d, fs, calc_power=False)
 
   # loop time measure 
   loop_time = tm.clock() - loop_start_time;
@@ -66,7 +72,10 @@ def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
   doa_start_time = tm.clock();
   
   # DoA run
-  pbf_del, angle_bf = bf_lib.bf_corr_doa(Ylm, angle_num_pts, r, fs)
+  if dec_disable:
+    pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs, OSR)
+  else:
+    pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs)
   
   # loop time measure 
   doa_time = tm.clock() - doa_start_time;
