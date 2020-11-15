@@ -9,6 +9,7 @@
 import numpy as np
 import argparse
 from bf_time_sim import *
+from bf_freq_1fft_sim import *
 
 def main():
 
@@ -30,6 +31,15 @@ def main():
   parser.add_argument("--inp-samp-freq", type=float,
                               default=3.072e6,
                               help="input sampling frequency in Hertz")
+
+  # Decimator disable
+  parser.add_argument("--dec-disable", action='store_true', 
+                              help="disable decimation filter")
+
+  # Output sampling frequency
+  parser.add_argument("--out-samp-freq", type=float,
+                              default=48e3,
+                              help="output sampling frequency in Hertz")
   
   # Sound speed
   parser.add_argument("-c", "--sound-speed", type=float,
@@ -42,8 +52,8 @@ def main():
   
   # Window length
   parser.add_argument("-D", "--window-length", type=int,
-                              default=2**13,
-                              help="input window length in units")
+                              default=4,
+                              help="input window length in ms")
   
   # Number of sensors
   parser.add_argument("-m", "--num-sensors", type=int,
@@ -85,7 +95,7 @@ def main():
   
   # CIC config
   parser.add_argument("--cic-config", nargs=2, type=int, default=[64, 5],
-                              help="CIC configuration [OSR, ORDER]")
+                              help="CIC configuration [CICOSR, ORDER]")
   
   # Plot
   parser.add_argument("-p", "--plot", action="store_true", default=False,
@@ -104,8 +114,8 @@ def main():
                               help="prefix to save plots")
 
   # Type
-  parser.add_argument("--domain", type=str, default='time',
-                              help="Domain (time, freq, hadam)")
+  parser.add_argument("--method", type=str, default='time',
+                              help="Domain (time, freq_1fft, freq_2fft, hadam)")
 
   
   
@@ -129,6 +139,9 @@ def main():
   # Wave number absolute value
   k_abs_max = 2.*np.pi*B/c
 
+  # Decimator disable
+  dec_disable = args.dec_disable
+
   # CIC disable
   cic_disable = args.cic_disable
   
@@ -144,20 +157,22 @@ def main():
   # Prefix to save plot
   save_plot_prefix = args.save_plot_prefix 
   
-  # Comp OSR
-  comp_osr = 1
-  
-  # Overall OSR
-  OSR = cic_osr*comp_osr
   
   # Input sampling frequency
   fsi = args.inp_samp_freq
   
   # Output sampling frequency
-  fso = fsi/float(OSR)
+  fso = args.out_samp_freq
+
+  # OSR
+  OSR = np.ceil(fsi/fso).astype(int)
+
+  # Comp OSR
+  comp_osr = OSR/cic_osr
   
   # Window length (input)
-  Di = args.window_length
+  window_length = args.window_length
+  Di = np.ceil(window_length*1e-3*fsi).astype(int)
   
   # Number of sensors
   M = args.num_sensors
@@ -200,7 +215,10 @@ def main():
   tdel_max = M*d/c
   
   # Maximum delay units
-  ndel_max = np.round(tdel_max*fso).astype(int)
+  if dec_disable:
+    ndel_max = np.round(tdel_max*fsi).astype(int)
+  else:
+    ndel_max = np.round(tdel_max*fso).astype(int)
 
   # Printing
   print 'Array parameters:'
@@ -211,11 +229,13 @@ def main():
   
   print 'Input parameters:'
   print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fsi/1e3)
+  print '  {0:30}: {1:}'.format('Window length (ms)', window_length)
   print '  {0:30}: {1:}'.format('Number of samples', Di)
   print '  {0:30}: {1:}'.format('Sources directions (degrees)', angle_deg)
   print '  {0:30}: {1:}'.format('Sources frequencies (KHz)', f_in/1e3)
   print '  {0:30}: {1:}'.format('Sources amplitude (un)', amp)
   print '  {0:30}: {1:}'.format('Channel noise (stdv) (mean=0)', stdv)
+  print '  {0:30}: {1:}'.format('Overall oversampling rate', OSR)
   
   if not cic_disable:
     print 'CIC filter parameters:'
@@ -223,7 +243,6 @@ def main():
     print '  {0:30}: {1:}'.format('Oversampling rate', cic_osr)
   
   print 'Other parameters:'
-  print '  {0:30}: {1:}'.format('Overall oversampling rate', OSR)
   print '  {0:30}: {1:}'.format('Number of frames', L)
   print '  {0:30}: {1:}'.format('Wave number (Hz*s/m)', k_abs_max)
   print '  {0:30}: {1:}'.format('Maximum delay (us)', tdel_max/1e-6)
@@ -231,12 +250,16 @@ def main():
   print '  {0:30}: {1:}'.format('Num. tested angles', angle_num_pts)
   print '  {0:30}: {1:}'.format('Sound speed (m/s)', c)
   
-  if args.domain == 'time':
-    bf_time_sim (c, d, cic_osr, cic_disable, cic_order, fsi, fso, Di, M, 
-      angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, f_in, 
-      amp, stdv, mean, ndel_max, save_plot_prefix) 
+  if args.method == 'time':
+    bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso, 
+      OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, 
+      f_in, amp, stdv, mean, ndel_max, L, save_plot_prefix) 
+  elif args.method == 'freq_1fft':
+    bf_freq_1fft_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, 
+      fso, OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k,
+      angle, f_in, amp, stdv, mean, ndel_max, L, save_plot_prefix) 
   else:
-    print 'Domain \''+ args.domain+ '\' not implemented yet.' 
+    print 'Domain \''+ args.method+ '\' not implemented yet.' 
  
 if __name__ == '__main__':
   main() 

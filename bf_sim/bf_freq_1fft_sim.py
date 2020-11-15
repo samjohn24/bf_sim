@@ -7,14 +7,13 @@
 # -FHDR-------------------------------------------------------------------------
 
 import numpy as np
-import scipy.signal as sig
 import matplotlib.pyplot as plt
 import time as tm
 import bf_lib
 
-def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso, 
-  OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k, angle, f_in, 
-  amp, stdv, mean, ndel_max, L, save_plot_prefix):
+def bf_freq_1fft_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi,
+  fso, OSR, Di, M, angle_num_pts, plot, verbose, plot_del, plot_del_k, angle,
+  f_in, amp, stdv, mean, ndel_max, L, save_plot_prefix):
   """
   d:                distance between sensors,
   cic_osr:          CIC filter oversampling rate,
@@ -23,7 +22,6 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
   dec_disable:      disable decimation filter,
   fsi:              input sampling rate,
   fso:              output sampling rate,
-  OSR:              total oversampling rate
   Di:               frame length,
   M:                number of sensors,
   angle_num_pts:    number of directions to be tested,
@@ -37,7 +35,7 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
   stdv:             channel noise (standard deviation),
   mean:             channel noise (mean),
   ndel_max:         maximum delay chain length,
-  L:                number of samples,
+  L:                number of frames 
   save_plot_prefix: prefix to save plot
   """
   
@@ -65,6 +63,7 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
     y = y_mod
     fs = fsi
   else:
+    #y = bf_lib.cic(y_mod, cic_osr, cic_order)
     y = bf_lib.decimate(y_mod, OSR, ftype='fir')
     fs = fso
   
@@ -76,91 +75,42 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
   print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fso/1e3)
   print '  {0:30}: {1:}'.format('Number of samples', Do)
   
-  # ==============================================================================
-  #                           DISCRETE-TIME BEAMFORMER
-  # ==============================================================================
-  
-  # =========================
-  #  Conventional Beamformer
-  # =========================
-  
-  # power vector
-  pbf_del = np.zeros((angle_num_pts,1))
-  
-  # angle vector
-  angle_bf = np.linspace(0, 2*np.pi, angle_num_pts)
-  
-  # angle in deg
-  angle_bf_deg = np.round(angle_bf*180./np.pi)
-  
-  # delay vector
-  tdel = np.zeros((M, 1))
-  ndel = np.zeros(M, dtype=int)
-  ndel_norm = np.zeros(M, dtype=int)
+  # ============================================================================
+  #                        ONE-DIMENSIONAL FFT BEAMFORMER
+  # ============================================================================
   
   # ======================
-  #  Start time measure
+  #   Beamformer  setup
   # ======================
   initial_time = tm.clock()
-  
-  # Loop
-  for k in np.arange(angle_num_pts):
-    # =============
-    #    Delay 
-    # =============
-  
-    # source wave vector
-    rbf_u = 1./c*np.array([[np.cos(angle_bf[k]),np.sin(angle_bf[k])]]).transpose()
-    
-    # delay
-    for i in np.arange(M):
-      tdel[i] = -np.matmul(r[i].transpose(),rbf_u)
-      ndel[i] = np.round(tdel[i]*fs)
-      ndel_norm[i] = ndel[i] + ndel_max/2
-  
-    if verbose:
-      print "angle_bf_deg=", angle_bf_deg[k]
-      print "ndel=", ndel
-      print "ndel_norm=", ndel_norm
-  
-    # ===================
-    #    Delay and sum
-    # ===================
-  
-    z = np.zeros(Do)
-  
-    # Plot
-    if plot_del and angle_bf_deg[k]==plot_del_k:
-      _, axarr = plt.subplots(M, sharex=True)
-  
-    for i in np.arange(M):
-      # Delay
-      y_roll = np.zeros(Do)
-      if ndel_norm[i] == 0:
-        y_roll[:] = y[:,i,0]
-      elif ndel_norm[i]>0:
-        y_roll[ndel_norm[i]:] = y[:-ndel_norm[i],i,0]
-  
-      # Sum  
-      z = z + y_roll
-  
-      # Plot
-      if plot_del and angle_bf_deg[k]==plot_del_k:
-          axarr[i].step(np.arange(Do)/fs,y_roll)
-          axarr[i].grid()
-          axarr[i].set_title('Delayed Input '+str(i))
-        
-    if plot_del and angle_bf_deg[k]==plot_del_k:
-      plt.xlabel('Time (s)')
 
-    if dec_disable:
-      z = sig.decimate(z, OSR, ftype='fir')
-      
-    # beamformer power
-    pbf_del[k] = np.sum(z**2)/float(len(z))
+  Ylm = bf_lib.bf_corr_setup(y, Do, L)
   
-    if verbose:
-      print "pbf_del:", pbf_del[k]
+  # ======================
+  #     One run calc
+  # ======================
+  
+  # start loop time measure
+  loop_start_time = tm.clock();
+  
+  # One run
+  bf_lib.bf_corr_run(Ylm, np.pi, r, fs, calc_power=False)  
+
+  # loop time measure 
+  loop_time = tm.clock() - loop_start_time;
+  
+  # ===========================
+  #  Direction of Arrival Calc
+  # ===========================
+  
+  # start loop time measure
+  doa_start_time = tm.clock();
+  
+  # DoA run
+  pbf_del, angle_bf = bf_lib.bf_corr_doa(Ylm, angle_num_pts, r, fs)
+  
+  # loop time measure 
+  doa_time = tm.clock() - doa_start_time;
   
   # ======================
   #   Final time measure
@@ -168,9 +118,9 @@ def bf_time_sim (c, d, cic_osr, cic_disable, cic_order, dec_disable, fsi, fso,
   
   print "Processing time:", (tm.clock()-initial_time)*1e3, "ms"
   
-  # ==============================================================================
+  # ============================================================================
   #                                   PLOT
-  # ==============================================================================
+  # ============================================================================
   
   # normalized power
   pbf_del_n = pbf_del/np.max(pbf_del)

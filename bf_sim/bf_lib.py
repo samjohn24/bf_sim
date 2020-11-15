@@ -507,6 +507,26 @@ def sigma_delta (inp, a1=0.5, a2=0.5, vpref=6., vnref=0., plot=False, scaling=Tr
 
   return y
 
+def decimate (inp, dec = 16, ftype='fir'):
+  """
+  Decimator filter
+
+  Args:
+  inp   - Filter input
+  dec   - Decimation rate
+  order - CIC order
+
+  Return
+  y     - Modulator output array
+  """
+  
+  (_, M, _) = inp.shape
+
+  for j in range(M):
+    inp[::dec,j,0] = sig.decimate(inp[:,j,0],dec, ftype=ftype)
+
+  return inp[::dec]
+
 def cic (inp, dec = 16, order = 5):
   """
   CIC filter

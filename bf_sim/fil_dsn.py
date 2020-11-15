@@ -13,6 +13,19 @@ import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
 
+def dwt_data_thres (data_dwt, th, soft=True):
+    data_out = data_dwt
+    for y in data_out:
+        a = y>=th
+        b = y<=-th
+        c = np.logical_and(y>-th,y<th)
+        if soft:
+            y[y>=th] = y[y>=th]-th
+            y[y<=-th] = y[y<=-th]+th
+        y[c] = 0.
+
+    return data_out
+
 def two_comp(x, b):
     """ Convert an integer to 2's complement in integer as well
     Args:
