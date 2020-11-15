@@ -527,6 +527,28 @@ def decimate (inp, dec = 16, ftype='fir'):
 
   return inp[::dec]
 
+def interpolate (inp, factor = 16):
+  """
+  Interpolation filter
+
+  Args:
+  inp   - Filter input
+  dec   - Decimation rate
+  order - CIC order
+
+  Return
+  y     - Modulator output array
+  """
+  
+  (a, M, b) = inp.shape
+  
+  outp = np.empty(shape=(a*factor,M,b))
+
+  for j in range(M):
+    outp[:,j,0] = sig.resample_poly(inp[:,j,0],factor, 1)
+
+  return outp
+
 def cic (inp, dec = 16, order = 5):
   """
   CIC filter

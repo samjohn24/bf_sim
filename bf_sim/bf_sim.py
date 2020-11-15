@@ -114,21 +114,35 @@ def main():
   parser.add_argument("-s","--save-plot-prefix", 
                               help="prefix to save plots")
 
+  # Disable plot title
+  parser.add_argument("--disable-plot-title", action="store_true",default=False,
+                              help="disable plot title")
+
   # Save in pdf
   parser.add_argument("--pdf", action="store_true", default=False,
                               help="save plots in PDF format")
+ 
+  # No show
+  parser.add_argument("--no-show", action="store_true", default=False,
+                              help="no show plots interactively")
+
+  # No show
+  parser.add_argument("--intp-factor", 
+                              help="interpolation factor")
 
   # Type
   parser.add_argument("--method", type=str, default='time',
                               help="Domain (time, freq_1fft, freq_2fft, hadam)")
 
+
+
   
   
   args = parser.parse_args()
   
-  # ==============================================================================
+  # ============================================================================
   #                              SETTING PARAMETERS
-  # ==============================================================================
+  # ============================================================================
   
   # Sound speed
   c = args.sound_speed
@@ -282,9 +296,24 @@ def main():
     y = bf_lib.decimate(y_mod, OSR, ftype='fir')
     fs = fso
   
+  
+  # ======================
+  #   Interpolation
+  # ======================
+
+  if args.intp_factor is not None:
+
+    intp_factor = int(args.intp_factor)
+
+    fs = fs*intp_factor
+
+    y = bf_lib.interpolate(y, intp_factor)
+
+    print '  {0:30}: {1:}'.format('Interpolation factor', intp_factor)
+
   # Window length (output)
   Do = len(y[:,0,0])
-  
+
   # Printing
   print 'Output parameters:'
   print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fso/1e3)
@@ -317,18 +346,25 @@ def main():
   fig = plt.figure()
   plt.step(angle_bf*180./np.pi, pbf_del, 'k')
   plt.xlabel('Angle (degrees)')
-  plt.title('Power')
+  if not args.disable_plot_title:
+    plt.title('Power')
   plt.grid()
+
+  if dec_disable:
+    _nodec = 'nodec'
+  else:
+    _nodec = 'dec'
+
+  if args.intp_factor is not None:
+    _inp_str = '_intp_%d'%(int(args.intp_factor))
+  else:
+    _inp_str = ''
   
   if save_plot_prefix is not None:
-    if dec_disable:
-      _nodec = 'nodec'
-    else:
-      _nodec = 'dec'
     if args.pdf:
-      filename = '%s_%d_%s_%s_power.pdf'%(save_plot_prefix,M,args.method,_nodec)
+      filename = '%s_%d_%s_%s%s_power.pdf'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
     else:
-      filename = '%s_%d_%s_%s_power.png'%(save_plot_prefix,M,args.method,_nodec)
+      filename = '%s_%d_%s_%s%s_power.png'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
     fig.savefig(filename)
     print filename + ' was written.'
   # Normalized power plot (polar)
@@ -336,21 +372,19 @@ def main():
   ax = plt.subplot(111, projection='polar')
   ax.step(angle_bf, pbf_del_n, 'k')
   ax.grid(True)
-  ax.set_title('Normalized power (polar)')
+  if not args.disable_plot_title:
+      ax.set_title('Normalized power (polar)')
   
   if save_plot_prefix is not None:
-    if dec_disable:
-      _nodec = 'nodec'
-    else:
-      _nodec = 'dec'
     if args.pdf:
-      filename = '%s_%d_%s_%s_polar.pdf'%(save_plot_prefix,M,args.method,_nodec)
+      filename = '%s_%d_%s_%s%s_polar.pdf'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
     else:
-      filename = '%s_%d_%s_%s_polar.png'%(save_plot_prefix,M,args.method,_nodec)
+      filename = '%s_%d_%s_%s%s_polar.png'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
     fig.savefig(filename)
     print filename + ' was written.'
   
-  plt.show()
+  if not args.no_show:
+    plt.show()
  
 if __name__ == '__main__':
   main() 
