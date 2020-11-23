@@ -12,7 +12,7 @@ import time as tm
 import bf_lib
 
 def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
-  plot_del_k, angle, ndel_max, L, r, y, fs, Do):
+  plot_del_k, angle, ndel_max, L, r, y, fs, Do, internal):
   """
   d:                distance between sensors,
   dec_disable:      disable decimation filter,
@@ -53,7 +53,10 @@ def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
   loop_start_time = tm.clock();
   
   # One run
-  bf_lib.bf_corr_run(Ylm, np.pi, r, fs, calc_power=False)  
+  if dec_disable and not internal:
+    bf_lib.bf_corr_run(Ylm, np.pi, r, fs, OSR=OSR, calc_power=False)  
+  else:
+    bf_lib.bf_corr_run(Ylm, np.pi, r, fs, OSR=1, calc_power=False)  
 
   # loop time measure 
   loop_time = tm.clock() - loop_start_time;
@@ -66,7 +69,10 @@ def bf_freq_1fft_sim (d, dec_disable, OSR, M,c,angle_num_pts, verbose, plot_del,
   doa_start_time = tm.clock();
   
   # DoA run
-  pbf_del, angle_bf = bf_lib.bf_corr_doa(Ylm, angle_num_pts, r, fs)
+  if dec_disable and not internal:
+    pbf_del, angle_bf = bf_lib.bf_corr_doa(Ylm, angle_num_pts, r, fs, OSR=OSR)
+  else:
+    pbf_del, angle_bf = bf_lib.bf_corr_doa(Ylm, angle_num_pts, r, fs, OSR=1)
   
   # loop time measure 
   doa_time = tm.clock() - doa_start_time;

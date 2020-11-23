@@ -152,7 +152,7 @@ def mic_array_setup (a, s, stdv, mean, plot = False):
 
   return y
 
-def bf_fft_setup (y, Mi, D, L, plot =  False, dec = 1):
+def bf_fft_setup (y, Mi, D, L, plot =  False):
   """
     Setup FFT beamformer
   
@@ -169,21 +169,23 @@ def bf_fft_setup (y, Mi, D, L, plot =  False, dec = 1):
   """
 
   # Leverage number of points
-  D = D*dec
+  Ds = D
 
   # Get time domain signal shape
   (N, M, _) = y.shape
+
+  #Mi = Mi*dec
 
   # Zero Padding
   y_pad = np.zeros((N, Mi, 1))
   y_pad[:,:M,:] = y
   
   #  Pass to Freq. Domain
-  Zl = np.zeros((L,Mi,D), dtype="complex")
+  Zl = np.zeros((L,Mi,Ds), dtype="complex")
   
   for l in np.arange(L):
     # FFT
-    Zl[l,:,:] = fftpack.fft2(y_pad[D*l:D*(l+1),:,0]).transpose()
+    Zl[l,:,:] = fftpack.fft2(y_pad[Ds*l:Ds*(l+1),:,0]).transpose()
 
   # Plot
   if plot:
@@ -218,7 +220,7 @@ def bf_fft_run (Zl, angle_bf, d, fs, OSR=1, calc_power=True):
   T = 1./fs
 
   # Data shape
-  (L, Mi, D) = Zl.shape
+  (L, Mi, Ds) = Zl.shape
 
   # power init
   pbf = 0
@@ -226,15 +228,15 @@ def bf_fft_run (Zl, angle_bf, d, fs, OSR=1, calc_power=True):
   # loop
   for l in np.arange(L):
 
-    # Freq
-    v = np.arange(D/(2*OSR), dtype="int")
+    # Freq (in passband range)
+    v = np.arange(Ds/(2*OSR), dtype="int")
 
     # Wavenumber sampled
-    u = np.round(-np.cos(angle_bf)*Mi*d*v/(D*c*T)).astype(int)
+    u = np.round(-np.cos(angle_bf)*Mi*d*v/(Ds*c*T)).astype(int)
     
     if calc_power:
       # accumulate power
-      pbf += np.sum(np.abs(Zl[l,u,v])**2)/float(D/2)
+      pbf += np.sum(np.abs(Zl[l,u,v])**2)/float(Ds/2)
   
   return pbf
 
@@ -325,7 +327,7 @@ def bf_corr_setup (y, D, L, plot = False):
 
   return Ylm
 
-def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True): 
+def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, OSR=1, calc_power = True): 
   """
   Correlation Beamformer Run
   
@@ -345,8 +347,11 @@ def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True):
   # Power initialize
   pbf = 0
 
+  Dp = D/(2*OSR)
+  # Freq (in passband range)
+  v = np.arange(Dp, dtype="int")
   # frequency iterator
-  v = np.arange(int(D/2))
+  #v = np.arange(int(D/(2*OSR)))
 
   # Period
   T = 1./fs
@@ -362,16 +367,16 @@ def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True):
   kbf = k_abs*np.array([[np.cos(angle_bf)],[np.sin(angle_bf)]])
 
   # reshape
-  kbf = kbf.transpose().reshape(D/2,2,1)
+  kbf = kbf.transpose().reshape(Dp,2,1)
 
   # steering vector
-  abf = np.zeros((D/2, M, 1), dtype="complex")
+  abf = np.zeros((Dp, M, 1), dtype="complex")
 
   for i in np.arange(M):
-    abf[:,i,:] = g*np.exp(-1j*np.matmul(r[i].T,kbf)).reshape((D/2,1))
+    abf[:,i,:] = g*np.exp(-1j*np.matmul(r[i].T,kbf)).reshape((Dp,1))
 
   # abf transpose conjugated
-  abf_h = abf.reshape((D/2,1,M)).conjugate()
+  abf_h = abf.reshape((Dp,1,M)).conjugate()
 
   # weighting vector hermitian
   wh = abf_h/np.sqrt(np.sum(np.abs(abf)**2))
@@ -381,13 +386,13 @@ def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True):
   # ======================
 
   # Initialize
-  R = np.zeros((D/2,M,M), dtype="complex")
+  R = np.zeros((Dp,M,M), dtype="complex")
 
   for l in np.arange(L):
 
     # Reshape
-    Yl = Ylm[l,:D/2,:]
-    Yl = Yl.reshape((D/2,M,1))
+    Yl = Ylm[l,:Dp,:]
+    Yl = Yl.reshape((Dp,M,1))
 
     # output
     y = np.matmul(wh, Yl)
@@ -395,7 +400,7 @@ def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True):
     if calc_power:
 
       # hermitian
-      Yl_h = Yl.reshape((D/2,1,M)).conjugate()
+      Yl_h = Yl.reshape((Dp,1,M)).conjugate()
 
       # Correlation calc
       R = R + np.matmul(Yl, Yl_h)
@@ -412,7 +417,7 @@ def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True):
 
   return pbf
 
-def bf_corr_doa (Ylm, angle_num_pts, r, fs, g=1.0):
+def bf_corr_doa (Ylm, angle_num_pts, r, fs, g=1.0, OSR=1):
   """
   Correlation Beamformer DoA
   
@@ -438,7 +443,7 @@ def bf_corr_doa (Ylm, angle_num_pts, r, fs, g=1.0):
   for k in np.arange(angle_num_pts):
     
     # One step run
-    pbf[k] = bf_corr_run(Ylm, angle_bf[k], r, fs, g)
+    pbf[k] = bf_corr_run(Ylm, angle_bf[k], r, fs, g, OSR)
 
   return pbf, angle_bf
 

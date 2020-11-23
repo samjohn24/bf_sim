@@ -12,7 +12,7 @@ import time as tm
 import bf_lib
 
 def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del, 
-  plot_del_k, angle, ndel_max, L, r, y, fs, Do):
+  plot_del_k, angle, ndel_max, L, r, y, fs, Do, internal):
   """
   d:                distance between sensors,
   dec_disable:      disable decimation filter,
@@ -56,10 +56,10 @@ def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del,
   loop_start_time = tm.clock();
   
   # One run
-  if dec_disable:
-    bf_lib.bf_fft_run(Zld, np.pi, d, fs, OSR, calc_power=False)
+  if dec_disable and not internal:
+    bf_lib.bf_fft_run(Zld, np.pi, d, fs, OSR=OSR, calc_power=False)
   else:
-    bf_lib.bf_fft_run(Zld, np.pi, d, fs, calc_power=False)
+    bf_lib.bf_fft_run(Zld, np.pi, d, fs, OSR=1, calc_power=False)
 
   # loop time measure 
   loop_time = tm.clock() - loop_start_time;
@@ -72,10 +72,10 @@ def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del,
   doa_start_time = tm.clock();
   
   # DoA run
-  if dec_disable:
-    pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs, OSR)
+  if dec_disable and not internal:
+    pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs, OSR=OSR)
   else:
-    pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs)
+    pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs, OSR=1)
   
   # loop time measure 
   doa_time = tm.clock() - doa_start_time;

@@ -13,7 +13,7 @@ import time as tm
 import bf_lib
 
 def bf_time_sim (d, dec_disable, OSR, M, c, angle_num_pts, verbose, plot_del, 
-  plot_del_k, angle, ndel_max, L, r, y, fs, Do):
+  plot_del_k, angle, ndel_max, L, r, y, fs, Do, internal):
   """
   d:                distance between sensors,
   dec_disable:      disable decimation filter,
@@ -113,7 +113,7 @@ def bf_time_sim (d, dec_disable, OSR, M, c, angle_num_pts, verbose, plot_del,
     if plot_del and angle_bf_deg[k]==plot_del_k:
       plt.xlabel('Time (s)')
 
-    if dec_disable:
+    if dec_disable and not internal:
       z = sig.decimate(z, OSR, ftype='fir')
       
     # beamformer power

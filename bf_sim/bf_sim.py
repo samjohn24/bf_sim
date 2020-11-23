@@ -127,6 +127,10 @@ def main():
                               help="no show plots interactively")
 
   # No show
+  parser.add_argument("--internal", action="store_true", default=False,
+                              help="show internal power (before decimation)")
+
+  # No show
   parser.add_argument("--intp-factor", 
                               help="interpolation factor")
 
@@ -239,6 +243,9 @@ def main():
   else:
     ndel_max = np.round(tdel_max*fso).astype(int)
 
+  # internal
+  internal = args.internal
+
   # Printing
   print 'Array parameters:'
   print '  {0:30}: {1:}'.format('Array type', 'ULA')
@@ -325,13 +332,16 @@ def main():
   
   if args.method == 'time':
     pbf_del, angle_bf = bf_time_sim (d, dec_disable, OSR, M, c, 
-      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do) 
+      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do,
+      internal) 
   elif args.method == 'freq_1fft':
     pbf_del, angle_bf = bf_freq_1fft_sim (d, dec_disable, OSR, M, c, 
-      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do) 
+      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do,
+      internal) 
   elif args.method == 'freq_2fft':
     pbf_del, angle_bf = bf_freq_2fft_sim (d, dec_disable, OSR, M, c,
-      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do) 
+      angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do,
+      internal) 
   else:
     print 'Domain \''+ args.method+ '\' not implemented yet.' 
 
@@ -355,6 +365,11 @@ def main():
   else:
     _nodec = 'dec'
 
+  if internal:
+    _str_int = '_internal'
+  else:
+    _str_int = ''
+
   if args.intp_factor is not None:
     _inp_str = '_intp_%d'%(int(args.intp_factor))
   else:
@@ -362,9 +377,11 @@ def main():
   
   if save_plot_prefix is not None:
     if args.pdf:
-      filename = '%s_%d_%s_%s%s_power.pdf'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
+      filename = '%s_%d_%s_%s%s%s_power.pdf'%(save_plot_prefix,M,args.method,\
+              _nodec,_inp_str,_str_int)
     else:
-      filename = '%s_%d_%s_%s%s_power.png'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
+      filename = '%s_%d_%s_%s%s%s_power.png'%(save_plot_prefix,M,args.method,\
+              _nodec,_inp_str,_str_int)
     fig.savefig(filename)
     print filename + ' was written.'
   # Normalized power plot (polar)
@@ -377,9 +394,11 @@ def main():
   
   if save_plot_prefix is not None:
     if args.pdf:
-      filename = '%s_%d_%s_%s%s_polar.pdf'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
+      filename = '%s_%d_%s_%s%s%s_polar.pdf'%(save_plot_prefix,M,args.method,\
+              _nodec,_inp_str,_str_int)
     else:
-      filename = '%s_%d_%s_%s%s_polar.png'%(save_plot_prefix,M,args.method,_nodec,_inp_str)
+      filename = '%s_%d_%s_%s%s%s_polar.png'%(save_plot_prefix,M,args.method,\
+              _nodec,_inp_str,_str_int)
     fig.savefig(filename)
     print filename + ' was written.'
   
