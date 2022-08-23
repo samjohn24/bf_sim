@@ -19,7 +19,7 @@ def main():
   # ==============================================================================
   
   parser = argparse.ArgumentParser(
-             description = "Discrete-time beamformer model (uniform linear array)",
+             description = "Discrete-time beamformer (uniform linear array) simulator",
              formatter_class=argparse.ArgumentDefaultsHelpFormatter
                           )
   

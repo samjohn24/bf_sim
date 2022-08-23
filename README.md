@@ -8,7 +8,7 @@ usage: bf_sim [-h] [--max-array-freq MAX_ARRAY_FREQ] [--inp-samp-freq INP_SAMP_F
               [--cic-config CIC_CONFIG CIC_CONFIG] [-p] [-v] [--plot-del-angle PLOT_DEL_ANGLE] [-s SAVE_PLOT_PREFIX]
               [--disable-plot-title] [--pdf] [--no-show] [--internal] [--intp-factor INTP_FACTOR] [--method METHOD]
 
-Discrete-time beamformer model (uniform linear array)
+Discrete-time beamformer (uniform linear array) simulator
 
 optional arguments:
   -h, --help            show this help message and exit
