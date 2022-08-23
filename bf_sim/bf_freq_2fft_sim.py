@@ -44,7 +44,7 @@ def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del,
   # ======================
   #   Beamformer  setup
   # ======================
-  initial_time = tm.clock()
+  initial_time = tm.perf_counter()
 
   Zld = bf_lib.bf_fft_setup(y, Mi, Do, L)
   
@@ -53,7 +53,7 @@ def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del,
   # ======================
   
   # start loop time measure
-  loop_start_time = tm.clock();
+  loop_start_time = tm.perf_counter();
   
   # One run
   if dec_disable and not internal:
@@ -62,14 +62,14 @@ def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del,
     bf_lib.bf_fft_run(Zld, np.pi, d, fs, OSR=1, calc_power=False)
 
   # loop time measure 
-  loop_time = tm.clock() - loop_start_time;
+  loop_time = tm.perf_counter() - loop_start_time;
   
   # ===========================
   #  Direction of Arrival Calc
   # ===========================
   
   # start loop time measure
-  doa_start_time = tm.clock();
+  doa_start_time = tm.perf_counter();
   
   # DoA run
   if dec_disable and not internal:
@@ -78,12 +78,12 @@ def bf_freq_2fft_sim (d, dec_disable, OSR,M,c,angle_num_pts, verbose, plot_del,
     pbf_del, angle_bf = bf_lib.bf_fft_doa(Zld, angle_num_pts, d, fs, OSR=1)
   
   # loop time measure 
-  doa_time = tm.clock() - doa_start_time;
+  doa_time = tm.perf_counter() - doa_start_time;
   
   # ======================
   #   Final time measure
   # ======================
   
-  print "Processing time:", (tm.clock()-initial_time)*1e3, "ms"
+  print("Processing time:", (tm.perf_counter()-initial_time)*1e3, "ms")
   
   return pbf_del, angle_bf

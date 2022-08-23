@@ -347,7 +347,7 @@ def bf_corr_run (Ylm, angle_bf, r, fs, g=1.0, OSR=1, calc_power = True):
   # Power initialize
   pbf = 0
 
-  Dp = D/(2*OSR)
+  Dp = D//(2*OSR)
   # Freq (in passband range)
   v = np.arange(Dp, dtype="int")
   # frequency iterator
@@ -698,8 +698,8 @@ def bf_time_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True, verbose = False
   angle_bf_deg = np.round(angle_bf[k]*180./np.pi)
 
   if verbose:
-    print "angle_bf_deg=", angle_bf_deg
-    print "ndel=", ndel
+    print("angle_bf_deg=", angle_bf_deg)
+    print("ndel=", ndel)
 
   # ===================
   #    Delay and sum
@@ -741,4 +741,4 @@ def bf_time_run (Ylm, angle_bf, r, fs, g=1.0, calc_power = True, verbose = False
   pbf_del[k] = np.sum(z**2)/float(len(z))
 
   if verbose:
-    print "pbf_del:", pbf_del[k]
+    print("pbf_del:", pbf_del[k])

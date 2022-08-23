@@ -61,7 +61,7 @@ def bf_time_sim (d, dec_disable, OSR, M, c, angle_num_pts, verbose, plot_del,
   # ======================
   #  Start time measure
   # ======================
-  initial_time = tm.clock()
+  initial_time = tm.perf_counter()
   
   # Loop
   for k in np.arange(angle_num_pts):
@@ -79,9 +79,9 @@ def bf_time_sim (d, dec_disable, OSR, M, c, angle_num_pts, verbose, plot_del,
       ndel_norm[i] = ndel[i] + ndel_max/2
   
     if verbose:
-      print "angle_bf_deg=", angle_bf_deg[k]
-      print "ndel=", ndel
-      print "ndel_norm=", ndel_norm
+      print("angle_bf_deg=", angle_bf_deg[k])
+      print("ndel=", ndel)
+      print("ndel_norm=", ndel_norm)
   
     # ===================
     #    Delay and sum
@@ -120,13 +120,13 @@ def bf_time_sim (d, dec_disable, OSR, M, c, angle_num_pts, verbose, plot_del,
     pbf_del[k] = np.sum(z**2)/float(len(z))
   
     if verbose:
-      print "pbf_del:", pbf_del[k]
+      print("pbf_del:", pbf_del[k])
   
   # ======================
   #   Final time measure
   # ======================
   
-  print "Processing time:", (tm.clock()-initial_time)*1e3, "ms"
+  print("Processing time:", (tm.perf_counter()-initial_time)*1e3, "ms")
 
   return pbf_del, angle_bf
   

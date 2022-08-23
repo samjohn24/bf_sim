@@ -247,41 +247,41 @@ def main():
   internal = args.internal
 
   # Printing
-  print 'Array parameters:'
-  print '  {0:30}: {1:}'.format('Array type', 'ULA')
-  print '  {0:30}: {1:2}'.format('Sensors distance (mm)', d*1e3)
-  print '  {0:30}: {1:2}'.format('Number of sensors', M)
-  print '  {0:30}: {1:2}'.format('Maximum frequency (KHz)', B/1e3)
+  print('Array parameters:')
+  print('  {0:30}: {1:}'.format('Array type', 'ULA'))
+  print('  {0:30}: {1:2}'.format('Sensors distance (mm)', d*1e3))
+  print('  {0:30}: {1:2}'.format('Number of sensors', M))
+  print('  {0:30}: {1:2}'.format('Maximum frequency (KHz)', B/1e3))
   
-  print 'Input parameters:'
-  print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fsi/1e3)
-  print '  {0:30}: {1:}'.format('Window length (ms)', window_length)
-  print '  {0:30}: {1:}'.format('Number of samples', Di)
-  print '  {0:30}: {1:}'.format('Sources directions (degrees)', angle_deg)
-  print '  {0:30}: {1:}'.format('Sources frequencies (KHz)', f_in/1e3)
-  print '  {0:30}: {1:}'.format('Sources amplitude (un)', amp)
-  print '  {0:30}: {1:}'.format('Channel noise (stdv) (mean=0)', stdv)
-  print '  {0:30}: {1:}'.format('Overall oversampling rate', OSR)
+  print('Input parameters:')
+  print('  {0:30}: {1:}'.format('Sampling frequency (KHz)', fsi/1e3))
+  print('  {0:30}: {1:}'.format('Window length (ms)', window_length))
+  print('  {0:30}: {1:}'.format('Number of samples', Di))
+  print('  {0:30}: {1:}'.format('Sources directions (degrees)', angle_deg))
+  print('  {0:30}: {1:}'.format('Sources frequencies (KHz)', f_in/1e3))
+  print('  {0:30}: {1:}'.format('Sources amplitude (un)', amp))
+  print('  {0:30}: {1:}'.format('Channel noise (stdv) (mean=0)', stdv))
+  print('  {0:30}: {1:}'.format('Overall oversampling rate', OSR))
   
   if not cic_disable:
-    print 'CIC filter parameters:'
-    print '  {0:30}: {1:}'.format('Order', cic_order)
-    print '  {0:30}: {1:}'.format('Oversampling rate', cic_osr)
+    print('CIC filter parameters:')
+    print('  {0:30}: {1:}'.format('Order', cic_order))
+    print('  {0:30}: {1:}'.format('Oversampling rate', cic_osr))
   
-  print 'Other parameters:'
-  print '  {0:30}: {1:}'.format('Number of frames', L)
-  print '  {0:30}: {1:}'.format('Wave number (Hz*s/m)', k_abs_max)
-  print '  {0:30}: {1:}'.format('Maximum delay (us)', tdel_max/1e-6)
-  print '  {0:30}: {1:}'.format('Maximum delay units ', ndel_max)
-  print '  {0:30}: {1:}'.format('Num. tested angles', angle_num_pts)
-  print '  {0:30}: {1:}'.format('Sound speed (m/s)', c)
+  print('Other parameters:')
+  print('  {0:30}: {1:}'.format('Number of frames', L))
+  print('  {0:30}: {1:}'.format('Wave number (Hz*s/m)', k_abs_max))
+  print('  {0:30}: {1:}'.format('Maximum delay (us)', tdel_max/1e-6))
+  print('  {0:30}: {1:}'.format('Maximum delay units ', ndel_max))
+  print('  {0:30}: {1:}'.format('Num. tested angles', angle_num_pts))
+  print('  {0:30}: {1:}'.format('Sound speed (m/s)', c))
 
   # ============================================================================
   #                             MODEL INITIALIZATION
   # ============================================================================
   
   # Reference time
-  ref_time = tm.clock()
+  ref_time = tm.perf_counter()
   
   # Sound  Sources
   s, k = bf_lib.inp_sources(fsi, angle, Di, f_in, amp, plot) 
@@ -316,15 +316,15 @@ def main():
 
     y = bf_lib.interpolate(y, intp_factor)
 
-    print '  {0:30}: {1:}'.format('Interpolation factor', intp_factor)
+    print('  {0:30}: {1:}'.format('Interpolation factor', intp_factor))
 
   # Window length (output)
   Do = len(y[:,0,0])
 
   # Printing
-  print 'Output parameters:'
-  print '  {0:30}: {1:}'.format('Sampling frequency (KHz)', fso/1e3)
-  print '  {0:30}: {1:}'.format('Number of samples', Do)
+  print('Output parameters:')
+  print('  {0:30}: {1:}'.format('Sampling frequency (KHz)', fso/1e3))
+  print('  {0:30}: {1:}'.format('Number of samples', Do))
 
   # ============================================================================
   #                           BEAMFORMING METHOD
@@ -343,7 +343,7 @@ def main():
       angle_num_pts, verbose, plot_del, plot_del_k, angle,ndel_max,L,r,y,fs,Do,
       internal) 
   else:
-    print 'Domain \''+ args.method+ '\' not implemented yet.' 
+    raise RuntimeError('Domain \''+ args.method+ '\' not implemented yet.' )
 
   # ============================================================================
   #                                   PLOT
@@ -383,7 +383,7 @@ def main():
       filename = '%s_%d_%s_%s%s%s_power.png'%(save_plot_prefix,M,args.method,\
               _nodec,_inp_str,_str_int)
     fig.savefig(filename)
-    print filename + ' was written.'
+    print(filename + ' was written.')
   # Normalized power plot (polar)
   fig = plt.figure()
   ax = plt.subplot(111, projection='polar')
@@ -400,7 +400,7 @@ def main():
       filename = '%s_%d_%s_%s%s%s_polar.png'%(save_plot_prefix,M,args.method,\
               _nodec,_inp_str,_str_int)
     fig.savefig(filename)
-    print filename + ' was written.'
+    print(filename + ' was written.')
   
   if not args.no_show:
     plt.show()

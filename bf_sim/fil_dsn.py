@@ -637,14 +637,14 @@ def dyn_params(h_all, fo, fs, fo_max = False, dump = False):
     equiv_adc_bits = np.log2(Af*8.)/2.
 
     if dump == True:
-        print 'SNR:', snr
-        print 'ENOB:', enob
-        print 'THD(dB):', thd
-        print 'THD(un):', 10.**(thd/10.)
-        print 'noise_std:', np.sqrt(noise_var)
-        print 'noise_var:', noise_var
-        print 'Harmonics energy:', Ah
-        print 'Equivalent ADC bits:', equiv_adc_bits
-        print 'fo:', fo
+        print('SNR:', snr)
+        print('ENOB:', enob)
+        print('THD(dB):', thd)
+        print('THD(un):', 10.**(thd/10.))
+        print('noise_std:', np.sqrt(noise_var))
+        print('noise_var:', noise_var)
+        print('Harmonics energy:', Ah)
+        print('Equivalent ADC bits:', equiv_adc_bits)
+        print('fo:', fo)
 
     return snr, enob, thd, noise_var, Ah, equiv_adc_bits
